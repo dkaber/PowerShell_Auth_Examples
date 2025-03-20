@@ -1,6 +1,7 @@
 #BasicInfo:
 $ariaOpsServer = "Aria Operations FQDN"
 #$authSource = "local"
+$resourceKind = "ClusterComputeResource"
 
 #Get Credentials to build auth:
 $credential = Get-Credential
@@ -24,3 +25,5 @@ $accessToken = "OpsToken " + $accessToken.token
 
 #add access token to Header
 $header.Add("Authorization",$accessToken)
+
+$resources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/resources?page=0&pageSize=1000&resourceKind=$resourceKind&_no_links=true" -Method "GET" -Headers $header
