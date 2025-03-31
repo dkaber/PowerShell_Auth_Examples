@@ -27,7 +27,7 @@ $accessToken = "OpsToken " + $accessToken.token
 $header.Add("Authorization",$accessToken)
 
 #Gets ResourceID's for all Cluster Compute Resources
-$resources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/resources?page=0&pageSize=1000&resourceKind=$resourceKind&_no_links=true" -Method "GET" -Headers $header
+$resources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/resources?page=0&pageSize=1000&resourceKind=$resourceKind&_no_links=true" -Method "GET" -Headers $header -SkipCertificateCheck
 
 #Takes a list of compute clusters and creates an Aria Operations scope for each.
 $resources = $resources.resourceList
@@ -54,8 +54,6 @@ Foreach ($res in $resources){
 
 #Get a List of UserGroups:
 #Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups" -Method GET -Headers $header -SkipCertificateCheck
-
-
 
 #Create Group and Assign it to a Scope:
 $groupRolePermissions = @{
