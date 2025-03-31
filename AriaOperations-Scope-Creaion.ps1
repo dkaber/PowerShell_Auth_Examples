@@ -26,8 +26,10 @@ $accessToken = "OpsToken " + $accessToken.token
 #add access token to Header
 $header.Add("Authorization",$accessToken)
 
+#Gets ResourceID's for all Cluster Compute Resources
 $resources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/resources?page=0&pageSize=1000&resourceKind=$resourceKind&_no_links=true" -Method "GET" -Headers $header
 
+#Takes a list of compute clusters and creates an Aria Operations scope for each.
 $resources = $resources.resourceList
 Foreach ($res in $resources){
     $resName = $res.ResourceKey.Name
@@ -50,6 +52,11 @@ Foreach ($res in $resources){
     Invoke-restMethod -uri "https://$ariaOpsServer/suite-api/api/auth/scopes" -Method "POST" -header $header -body ($body | convertTo-Json -depth 10)  -SkipCertificateCheck
 }
 
+#Get a List of UserGroups:
+#Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups" -Method GET -Headers $header -SkipCertificateCheck
+
+
+
 #Create Group and Assign it to a Scope:
 $groupRolePermissions = @{
     "roleName" = "PowerUser"
@@ -60,6 +67,15 @@ $groupBody = @{
     "name" = "Group Name"
     "role-permissions" = @($groupRolePermissions)
 }
+
+#Example of assigning a custom scope to an existing user group:
+$groupRolePermissions = @{
+  "roleName" = "PowerUser"
+  "allowAllObjects" = $false
+  "scopeId" = "f386ab7e-75ec-47b2-a92b-2516b8a6b415"
+}
+Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups/27e3cccc-0848-4ea5-a6b3-e4c44dad0361/permissions" -Method PUT -Headers $header -Body ($groupRolePermissions | ConvertTo-JSON -depth 10) -SkipCertificateCheck
+
 
 #Example output of a scope
 <#{
