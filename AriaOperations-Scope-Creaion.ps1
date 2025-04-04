@@ -32,6 +32,8 @@ $resources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/resour
 #Takes a list of compute clusters and creates an Aria Operations scope for each.
 $resources = $resources.resourceList
 Foreach ($res in $resources){
+    $searchScope = "Scripted Scope Creation of $resName"
+    $existingScope = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/scopes?Name=$searchScope" -Method "Get" -Headers $header -SkipCertificateCheck
     $resName = $res.ResourceKey.Name
     $resID = $res.identifier
     $resourceSelection = @{
