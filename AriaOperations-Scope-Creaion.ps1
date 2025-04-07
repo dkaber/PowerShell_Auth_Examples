@@ -57,24 +57,43 @@ Foreach ($res in $resources){
 #Get a List of UserGroups:
 #Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups" -Method GET -Headers $header -SkipCertificateCheck
 
-#Create Group and Assign it to a Scope:
+#Find the Active Directory Authentication SourceID
+$authSources = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/sources" -Method "GET" -Headers $header -SkipCertificateCheck
+$authSource = $authSources.Sources | Where-Object {$_.sourceType.ID -eq "ACTIVE_DIRECTORY"}
+
+
+#Create/Import Group and Assign it to a Scope - For existing Active Directory Groups, the groups will be imported using the id of the Authentication source.
 $groupRolePermissions = @{
     "roleName" = "PowerUser"
     "allowAllObjects" = $false
     "scopeId" = "f386ab7e-75ec-47b2-a92b-2516b8a6b415"
 }
 $groupBody = @{
-    "name" = "Group Name"
+    "authID" = $authSource.id
+    "name" = "Aria Operations Users"
     "role-permissions" = @($groupRolePermissions)
 }
 
-#Example of assigning a custom scope to an existing user group:
-$groupRolePermissions = @{
-  "roleName" = "PowerUser"
-  "allowAllObjects" = $false
-  "scopeId" = "f386ab7e-75ec-47b2-a92b-2516b8a6b415"
+#assign the groupBody name array value to it's own string 
+$groupName = $groupBody.Name
+
+#check if the group already exists in Aria Operations:
+$userGroup = Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups?name=$groupName" -Method "GET" -header $header -SkipCertificateCheck
+if ($userGroup.userGroups.count -eq 0){
+  #Group not found, will create group
+  Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups" -Method "POST" -header $header -body ($groupBody | convertTo-JSON -depth 10) -SkipCertificateCheck
+}Else{
+  #Group already exists, will have to modify
+  #Example of assigning a custom scope to an existing user group:
+  $userGroupID = $userGroup.userGroups.ID
+  $groupRolePermissions = @{
+    "roleName" = "PowerUser"
+    "allowAllObjects" = $false
+    "scopeId" = "f386ab7e-75ec-47b2-a92b-2516b8a6b415"
+  }
+  Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups/$userGroupID/permissions" -Method PUT -Headers $header -Body ($groupRolePermissions | ConvertTo-JSON -depth 10) -SkipCertificateCheck
 }
-Invoke-RestMethod -uri "https://$ariaOpsServer/suite-api/api/auth/usergroups/27e3cccc-0848-4ea5-a6b3-e4c44dad0361/permissions" -Method PUT -Headers $header -Body ($groupRolePermissions | ConvertTo-JSON -depth 10) -SkipCertificateCheck
+
 
 
 #Example output of a scope
