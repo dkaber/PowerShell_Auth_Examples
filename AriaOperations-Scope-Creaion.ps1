@@ -1,7 +1,5 @@
 #BasicInfo:
 $ariaOpsServer = "Aria Operations FQDN"
-#$authSource = "local"
-$resourceKind = "ClusterComputeResource"
 
 #Get Credentials to build auth:
 $credential = Get-Credential
