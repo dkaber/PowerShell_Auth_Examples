@@ -3,7 +3,7 @@ $vCenterFQDN = "vcenter-mgmt.vcf.sddc.lab"
 #$vCenterFQDN = <vCenter FQDN>
 #hostID = <HostID>
 #You can use the API calls below to select a sepcific host by name and have it return the MOID needed for this
-$hostID = "host-3949369"
+$hostID = "host-3949374"
 
 #Prompt for credentials and format it appropriately for the request
 $Credential = Get-Credential
@@ -37,8 +37,15 @@ $componentBody = @{
     }
 }
 
+#Vendor Add-On Example using the Dell Add-On for PowerEdge Servers version 803-A03
+$vendorAddOnBody = @{
+    "name" = "DEL-ESXi"
+    "version" = "803.24414501-A03"
+}
+
 $result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID/software/base-image" -Method "PUT" -Headers $session -body ($baseImageBody | ConvertTO-JSON) -SkipCertificateCheck
 $componentResult = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID/software/components" -Method "PATCH" -Headers $session -body ($componentBody | ConvertTO-JSON) -SkipCertificateCheck
+$addOnResult = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID/software/add-on" -Method "PUT" -Headers $session -body ($vendorAddOnBody | ConvertTO-JSON) -SkipCertificateCheck
 
 #Scan the draft:
 $result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID`?action=scan&vmw-task=true" -Method "POST" -headers $session -SkipCertificateCheck
