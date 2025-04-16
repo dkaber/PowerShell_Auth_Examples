@@ -1,5 +1,7 @@
 #Basic Info:
-$vCenterFQDN = <vCenter FQDN>
+$vCenterFQDN = "vcenter-mgmt.vcf.sddc.lab"
+#$vCenterFQDN = <vCenter FQDN>
+$hostID = "host-3949363"
 
 #Prompt for credentials and format it appropriately for the request
 $Credential = Get-Credential
@@ -16,8 +18,10 @@ $res = Invoke-REstMethod -uri "https://$vCenterFQDN/api/session" -Method "POST" 
 
 #Use this variable as your header going forward. You do not need to use the ConvertTo-JSON cmdlet
 $session = @{
-    "vmware-api-session-id" = $res.value
+    "vmware-api-session-id" = $res
+    "Content-Type" = "application/json"
+    "Accept" = "application/json"
 }
 
 #sample API call to get list of VMs
-$result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/vcenter/vm" -Method "GET" -Headers $header -SkipCertificateCheck
+$result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/vcenter/vm" -Method "GET" -Headers $session -SkipCertificateCheck
