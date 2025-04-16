@@ -3,7 +3,7 @@ $vCenterFQDN = "vcenter-mgmt.vcf.sddc.lab"
 #$vCenterFQDN = <vCenter FQDN>
 #hostID = <HostID>
 #You can use the API calls below to select a sepcific host by name and have it return the MOID needed for this
-$hostID = "host-3949374"
+$hostID = "host-3949390"
 
 #Prompt for credentials and format it appropriately for the request
 $Credential = Get-Credential
@@ -50,6 +50,15 @@ $addOnResult = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hos
 #Scan the draft:
 $result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID`?action=scan&vmw-task=true" -Method "POST" -headers $session -SkipCertificateCheck
 
+#wait until the scan job is complete before moving on:
+$percentComplete = 0
+do {
+    Start-Sleep -seconds 30
+    $jobStatus = Invoke-RestMethod -uri "https://$vCenterFQDN/api/cis/tasks/$result" -Method "GET" -headers $session -SkipCertificateCheck
+    $percentComplete = $jobStatus.Progress.completed
+    write-host "Percent Complete: $percentComplete"
+}until($percentComplete -eq 100)
+
 #Commit And Scan
 #Example Output From API Explorer:
 #curl -X POST 'https://vcenter-mgmt.vcf.sddc.lab/api/esx/settings/hosts/host-3949363/software/drafts/29?action=commit&vmw-task=true' -H 'vmware-api-session-id: <valid-vapi-session-id>' -H 'Content-type: application/json' -d '{ "message": "" }'
@@ -57,6 +66,15 @@ $messageBody = @{
     "message" = $null
 }
 $result = Invoke-RestMethod -uri "https://$vCenterFQDN/api/esx/settings/hosts/$hostID/software/drafts/$draftID`?action=commit&vmw-task=true" -Method "POST" -headers $session -body ($messageBody | ConvertTo-JSON) -SkipCertificateCheck
+
+#wait until the scan job is complete before moving on:
+$percentComplete = 0
+do {
+    Start-Sleep -seconds 30
+    $jobStatus = Invoke-RestMethod -uri "https://$vCenterFQDN/api/cis/tasks/$result" -Method "GET" -headers $session -SkipCertificateCheck
+    $percentComplete = $jobStatus.Progress.completed
+    write-host "Percent Complete: $percentComplete"
+}until($percentComplete -eq 100)
 
 #Apply Software:
 #Example Output From API Explorer:
